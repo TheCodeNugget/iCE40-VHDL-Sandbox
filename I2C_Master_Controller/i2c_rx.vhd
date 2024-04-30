@@ -1,6 +1,6 @@
 library ieee;
-use ieee.std_logic_1164.all;
-use ieee.numeric_std.all;
+    use ieee.std_logic_1164.all;
+    use ieee.numeric_std.all;
 
 entity i2c_rx is
     port (
@@ -42,7 +42,7 @@ begin
 
     rst : process(i_clk, i_rst)
     begin
-        if (i_rst = '1') then
+        if (i_rst) then
             r_rx_currState <= c_rx_idle;
         else
             r_rx_currState <= r_rx_nextState;
@@ -52,23 +52,23 @@ begin
     rx_fsm : process(all)
     begin
         r_rx_nextState <= r_rx_currState;
-
-        if (i_en = '1') then
-            r_rx_nextState <= c_rx_bit7;
-        elsif (i_scl_falling_edge = '1') then
+        if (r_rx_currState = c_rx_idle) then
+            if (i_en) then
+                r_rx_nextState <= c_rx_bit7;
+            end if;
+        elsif (i_scl_falling_edge) then
             with r_rx_currState select
-                r_rx_nextState <=   c_rx_bit6 when c_rx_bit7,
-                                    c_rx_bit5 when c_rx_bit6,
-                                    c_rx_bit4 when c_rx_bit5,
-                                    c_rx_bit3 when c_rx_bit4,
-                                    c_rx_bit2 when c_rx_bit3,
-                                    c_rx_bit1 when c_rx_bit2,
-                                    c_rx_bit0 when c_rx_bit1,
-                                    c_rx_wack when c_rx_bit0,
-                                    c_rx_idle when c_rx_wack,
-                                    c_rx_idle when others;
-        else
-            r_rx_nextState <= c_rx_idle;
+                r_rx_nextState <=
+                    c_rx_bit6 when c_rx_bit7,
+                    c_rx_bit5 when c_rx_bit6,
+                    c_rx_bit4 when c_rx_bit5,
+                    c_rx_bit3 when c_rx_bit4,
+                    c_rx_bit2 when c_rx_bit3,
+                    c_rx_bit1 when c_rx_bit2,
+                    c_rx_bit0 when c_rx_bit1,
+                    c_rx_wack when c_rx_bit0,
+                    c_rx_idle when c_rx_wack,
+                    c_rx_idle when others;
         end if;
     end process;
 
@@ -78,7 +78,7 @@ begin
 
     rx_data: process (all)
     begin
-        if (i_bus_scl = '1') then
+        if (i_bus_scl) then
             case r_rx_currState is
                 when c_rx_bit7 => o_data(7) <= i_bus_sda;
                 when c_rx_bit6 => o_data(6) <= i_bus_sda;
@@ -93,12 +93,12 @@ begin
     end process;
 
     -----------------------------------------------------------
-    -- I2C SDA Driver for sending ACK to Transmitter
+    -- I2C SDA Driver enable for sending ACK to Transmitter
     -----------------------------------------------------------
 
-    tx_en: process (i_clk, i_rst)
+    sda_en: process (i_clk, i_rst)
     begin
-        if (i_rst = '1') then
+        if (i_rst) then
             o_sda_en <= '1';
         else
             o_sda_en <= '1' when r_rx_currState = c_rx_wack else '0';
@@ -111,11 +111,11 @@ begin
 
     tx_ack: process (i_clk, i_rst)
     begin
-        if (i_rst = '1') then
+        if (i_rst) then
             o_rx_ack_sda <= '1';
         else
             if (r_rx_currState = c_rx_wack) then
-                if (i_bus_scl = '0') then
+                if (not i_bus_scl) then
                     o_rx_ack_sda <= (i_complete);
                 end if;
             else
@@ -126,10 +126,14 @@ begin
 
     byte_flag: process (i_clk, i_rst)
     begin
-        if (i_rst = '1') then
+        if (i_rst) then
             o_byte_rdy <= '0';
         else
-            o_byte_rdy <= '1' when r_rx_currState = c_rx_wack else '0';
+            if (r_rx_currState = c_rx_wack) and (i_scl_falling_edge = '1') then
+                o_byte_rdy <= '1';
+            else
+                o_byte_rdy <= '0';
+            end if;
         end if;
     end process;
 
