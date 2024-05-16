@@ -26,7 +26,7 @@ begin
     -- Detect FSM
     -----------------------------------------------------------
 
-    rst: process (i_clk, i_rst)
+    rst: process (rising_edge(i_clk), rising_edge(i_rst))
     begin
         if (i_rst) then
             r_startDetect_currState <= c_state_idle;
@@ -52,7 +52,7 @@ begin
         end case;
     end process;
 
-    start_detect: process (i_clk, i_rst)
+    start_detect: process (rising_edge(i_clk), rising_edge(i_rst))
     begin
         if (i_rst) then
             o_start <= '0';
