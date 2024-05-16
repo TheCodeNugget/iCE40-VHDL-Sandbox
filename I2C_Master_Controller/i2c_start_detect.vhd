@@ -26,37 +26,31 @@ begin
     -- Detect FSM
     -----------------------------------------------------------
 
-    rst: process (rising_edge(i_clk), rising_edge(i_rst))
+    rst: process (i_clk, i_rst) is
     begin
         if (i_rst) then
             r_startDetect_currState <= c_state_idle;
-        else
+        elsif (rising_edge(i_clk)) then
             r_startDetect_currState <= r_startDetect_nextState;
         end if;
     end process;
 
-    detector_fsm: process (all)
+    detector_fsm: process (all) is
     begin
-        r_startDetect_nextState <= r_startDetect_currState;
-        case (r_startDetect_currState) is
-            when c_state_idle =>
-                if (i_bus_sda and i_bus_scl) then
-                    r_startDetect_nextState <= c_state_detect;
-                end if;
-            when c_state_detect =>
-                if (not (i_bus_scl and i_bus_sda)) then
-                    r_startDetect_nextState <= c_state_idle;
-                end if;
-            when others =>
-                r_startDetect_nextState <= c_state_idle;
-        end case;
+        if (rising_edge(i_clk)) then
+            case (r_startDetect_currState) is
+                when c_state_idle => r_startDetect_nextState <= c_state_detect when (i_bus_sda and i_bus_scl) else r_startDetect_currState;
+                when c_state_detect => r_startDetect_nextState <= c_state_idle when (not (i_bus_sda and i_bus_scl)) else r_startDetect_currState;
+                when others => r_startDetect_nextState <= c_state_idle;
+            end case;
+        end if;
     end process;
 
-    start_detect: process (rising_edge(i_clk), rising_edge(i_rst))
+    start_detect: process (i_clk, i_rst) is
     begin
         if (i_rst) then
             o_start <= '0';
-        elsif (r_startDetect_currState = c_state_detect) then
+        elsif rising_edge(i_clk) and (r_startDetect_currState = c_state_detect) then
             o_start <= '1' when ((not i_bus_sda) and i_bus_scl) else '0';
         end if;
     end process;
