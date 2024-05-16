@@ -40,7 +40,7 @@ begin
     -- TX FSM
     -----------------------------------------------------------
 
-    rst: process (i_clk, i_rst)
+    rst: process (rising_edge(i_clk), rising_edge(i_rst)) is
     begin
         if (i_rst) then
             r_tx_currState <= c_tx_idle;
@@ -49,7 +49,7 @@ begin
         end if;
     end process;
 
-    tx_fsm : process(all)
+    tx_fsm : process(all) is
     begin
         r_tx_nextState <= r_tx_currState;
         if (r_tx_currState = c_tx_idle) then
@@ -76,7 +76,7 @@ begin
     -- I2C RX DATA
     -----------------------------------------------------------
 
-    tx_data: process (i_clk,i_rst)
+    tx_data: process (rising_edge(i_clk), rising_edge(i_rst)) is
     begin
         if (i_rst) then
             o_byte_tx_sda <= '1';
@@ -101,7 +101,7 @@ begin
     -- I2C SDA Driver Disable for Sampling Receiver ACK
     -----------------------------------------------------------
 
-    sda_dis: process (i_clk, i_rst)
+    sda_dis: process (rising_edge(i_clk), rising_edge(i_rst)) is
     begin
         if (i_rst) then
             o_sda_disable <= '0';
@@ -114,7 +114,7 @@ begin
     -- Raise Error Flag if ACK not Present
     -----------------------------------------------------------
 
-    tx_err: process (i_clk, i_rst)
+    tx_err: process (rising_edge(i_clk), rising_edge(i_rst)) is
     begin
         if (i_rst) then
             o_byte_err <= '0';
@@ -129,7 +129,7 @@ begin
     -- Raise Done Flag
     -----------------------------------------------------------
 
-    tx_done: process (i_clk, i_rst)
+    tx_done: process (rising_edge(i_clk), rising_edge(i_rst)) is
     begin
         if (i_rst) then
             o_byte_sent <= '0';
