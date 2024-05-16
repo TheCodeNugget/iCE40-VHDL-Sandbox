@@ -13,6 +13,7 @@ end entity;
 
 architecture rtl of i2c_scl_fallingEdge_detect is
 
+    -- I2C Bus States
     constant c_bus_idle: std_logic_vector(1 downto 0) := b"00";
     constant c_bus_scl0: std_logic_vector(1 downto 0) := b"01";
     constant c_bus_scll: std_logic_vector(1 downto 0) := b"10";
@@ -24,11 +25,11 @@ begin
     -- SCL FSM
     -----------------------------------------------------------
 
-    scl_fsm: process (rising_edge(i_clk), rising_edge(i_rst)) is
+    scl_fsm: process (i_clk, i_rst) is
     begin
         if (i_rst) then
             r_scl_state <= c_bus_idle;
-        else
+        elsif (rising_edge(i_clk)) then
             case c_bus_idle is
                 when c_bus_idle =>
                     if (not i_bus_scl) then
@@ -48,11 +49,11 @@ begin
     -- Raise Falling Edge Flag
     -----------------------------------------------------------
 
-    edge_flag: process (rising_edge(i_clk), rising_edge(i_rst)) is
+    edge_flag: process (i_clk, i_rst) is
     begin
         if (i_rst) then
             o_falling_edge <= '0';
-        else
+        elsif (rising_edge(i_clk)) then
             o_falling_edge <= '1' when (r_scl_state = c_bus_scl0) else '0';
         end if;
     end process;
