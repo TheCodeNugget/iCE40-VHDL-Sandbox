@@ -24,7 +24,7 @@ begin
     -- SCL FSM
     -----------------------------------------------------------
 
-    scl_fsm: process (i_clk, i_rst)
+    scl_fsm: process (rising_edge(i_clk), rising_edge(i_rst)) is
     begin
         if (i_rst) then
             r_scl_state <= c_bus_idle;
@@ -48,7 +48,7 @@ begin
     -- Raise Falling Edge Flag
     -----------------------------------------------------------
 
-    edge_flag: process (i_clk, i_rst) is
+    edge_flag: process (rising_edge(i_clk), rising_edge(i_rst)) is
     begin
         if (i_rst) then
             o_falling_edge <= '0';
