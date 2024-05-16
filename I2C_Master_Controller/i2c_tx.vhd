@@ -20,6 +20,7 @@ end entity;
 
 architecture rtl of i2c_tx is
 
+    -- TX Architecture States
     constant c_tx_idle : std_logic_vector(3 downto 0) := b"0000";
     constant c_tx_bit0 : std_logic_vector(3 downto 0) := b"0001";
     constant c_tx_bit1 : std_logic_vector(3 downto 0) := b"0010";
@@ -40,35 +41,37 @@ begin
     -- TX FSM
     -----------------------------------------------------------
 
-    rst: process (rising_edge(i_clk), rising_edge(i_rst)) is
+    rst: process (i_clk, i_rst) is
     begin
         if (i_rst) then
             r_tx_currState <= c_tx_idle;
-        else
+        elsif (rising_edge(i_clk)) then
             r_tx_currState <= r_tx_nextState;
         end if;
     end process;
 
     tx_fsm : process(all) is
     begin
-        r_tx_nextState <= r_tx_currState;
-        if (r_tx_currState = c_tx_idle) then
-            if (i_en) then
-                r_tx_nextState <= c_tx_bit7;
+        if (rising_edge(i_clk)) then
+            r_tx_nextState <= r_tx_currState;
+            if (r_tx_currState = c_tx_idle) then
+                if (i_en) then
+                    r_tx_nextState <= c_tx_bit7;
+                end if;
+            elsif (i_scl_falling_edge) then
+                with r_tx_currState select
+                    r_tx_nextState <=
+                        c_tx_bit6 when c_tx_bit7,
+                        c_tx_bit5 when c_tx_bit6,
+                        c_tx_bit4 when c_tx_bit5,
+                        c_tx_bit3 when c_tx_bit4,
+                        c_tx_bit2 when c_tx_bit3,
+                        c_tx_bit1 when c_tx_bit2,
+                        c_tx_bit0 when c_tx_bit1,
+                        c_tx_rack when c_tx_bit0,
+                        c_tx_idle when c_tx_rack,
+                        c_tx_idle when others;
             end if;
-        elsif (i_scl_falling_edge) then
-            with r_tx_currState select
-                r_tx_nextState <=
-                    c_tx_bit6 when c_tx_bit7,
-                    c_tx_bit5 when c_tx_bit6,
-                    c_tx_bit4 when c_tx_bit5,
-                    c_tx_bit3 when c_tx_bit4,
-                    c_tx_bit2 when c_tx_bit3,
-                    c_tx_bit1 when c_tx_bit2,
-                    c_tx_bit0 when c_tx_bit1,
-                    c_tx_rack when c_tx_bit0,
-                    c_tx_idle when c_tx_rack,
-                    c_tx_idle when others;
         end if;
     end process;
 
@@ -76,11 +79,11 @@ begin
     -- I2C RX DATA
     -----------------------------------------------------------
 
-    tx_data: process (rising_edge(i_clk), rising_edge(i_rst)) is
+    tx_data: process (i_clk, i_rst) is
     begin
         if (i_rst) then
             o_byte_tx_sda <= '1';
-        else
+        elsif (rising_edge(i_clk)) then
             with r_tx_currState select
                 o_byte_tx_sda <=
                     '1' when c_tx_idle,
@@ -101,11 +104,11 @@ begin
     -- I2C SDA Driver Disable for Sampling Receiver ACK
     -----------------------------------------------------------
 
-    sda_dis: process (rising_edge(i_clk), rising_edge(i_rst)) is
+    sda_dis: process (i_clk, i_rst) is
     begin
         if (i_rst) then
             o_sda_disable <= '0';
-        else
+        elsif (rising_edge(i_clk)) then
             o_sda_disable <= '1' when (r_tx_currState = c_tx_rack) else '0';
         end if;
     end process;
@@ -114,14 +117,16 @@ begin
     -- Raise Error Flag if ACK not Present
     -----------------------------------------------------------
 
-    tx_err: process (rising_edge(i_clk), rising_edge(i_rst)) is
+    tx_err: process (i_clk, i_rst) is
     begin
         if (i_rst) then
             o_byte_err <= '0';
-        elsif (r_tx_currState = c_tx_rack) and (i_bus_scl = '1') and (i_bus_sda = '1') then
-            o_byte_err <= '1';
-        elsif (o_byte_sent = '1') then
-            o_byte_err <= '0';
+        elsif (rising_edge(i_clk)) then
+            if (r_tx_currState = c_tx_rack) and (i_bus_scl = '1') and (i_bus_sda = '1') then
+                o_byte_err <= '1';
+            elsif (o_byte_sent = '1') then
+                o_byte_err <= '0';
+            end if;
         end if;
     end process;
 
@@ -129,11 +134,11 @@ begin
     -- Raise Done Flag
     -----------------------------------------------------------
 
-    tx_done: process (rising_edge(i_clk), rising_edge(i_rst)) is
+    tx_done: process (i_clk, i_rst) is
     begin
         if (i_rst) then
             o_byte_sent <= '0';
-        else
+        elsif (rising_edge(i_clk)) then
             if (r_tx_currState = c_tx_rack) and (i_scl_falling_edge = '1') then
                 o_byte_sent <= '1';
             else
