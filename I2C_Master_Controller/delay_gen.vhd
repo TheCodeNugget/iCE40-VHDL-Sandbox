@@ -22,12 +22,14 @@ begin
         if (i_rst or o_done) then
             r_count <= "0";
         else
-            if (i_start) then
-                r_count <= "1";
-            elsif ((r_count = i_threshold) or (r_count = "0")) then
-                r_count <= "0";
-            else
-                r_count <= r_count + "1";
+            if (rising_edge(i_clk)) then
+                if (i_start) then
+                    r_count <= "1";
+                elsif ((r_count = i_threshold) or (r_count = "0")) then
+                    r_count <= "0";
+                else
+                    r_count <= r_count + "1";
+                end if;
             end if;
         end if;
     end process;
@@ -37,7 +39,9 @@ begin
         if (i_rst) then
             o_done <= '0';
         else
-        o_done <= '1' when (r_count = i_threshold) else '0';
+            if (rising_edge(i_clk)) then
+                o_done <= '1' when (r_count = i_threshold) else '0';
+            end if;
         end if;
     end process;
 end architecture;
