@@ -40,7 +40,7 @@ begin
     -- RX FSM
     -----------------------------------------------------------
 
-    rst : process(i_clk, i_rst)
+    rst : process (rising_edge(i_clk), rising_edge(i_rst)) is
     begin
         if (i_rst) then
             r_rx_currState <= c_rx_idle;
@@ -76,7 +76,7 @@ begin
     -- I2C RX DATA
     -----------------------------------------------------------
 
-    rx_data: process (all)
+    rx_data: process (all) is
     begin
         if (i_bus_scl) then
             case r_rx_currState is
@@ -96,7 +96,7 @@ begin
     -- I2C SDA Driver enable for sending ACK to Transmitter
     -----------------------------------------------------------
 
-    sda_en: process (i_clk, i_rst)
+    sda_en: process (rising_edge(i_clk), rising_edge(i_rst)) is
     begin
         if (i_rst) then
             o_sda_en <= '1';
@@ -109,7 +109,7 @@ begin
     -- RX Ack Gen
     -----------------------------------------------------------
 
-    tx_ack: process (i_clk, i_rst)
+    tx_ack: process (rising_edge(i_clk), rising_edge(i_rst)) is
     begin
         if (i_rst) then
             o_rx_ack_sda <= '1';
@@ -124,7 +124,7 @@ begin
         end if;
     end process;
 
-    byte_flag: process (i_clk, i_rst)
+    byte_flag: process (rising_edge(i_clk), rising_edge(i_rst)) is
     begin
         if (i_rst) then
             o_byte_rdy <= '0';
