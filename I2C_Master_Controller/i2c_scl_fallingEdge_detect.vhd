@@ -7,7 +7,7 @@ entity i2c_scl_fallingEdge_detect is
         i_clk : in std_logic;
         i_rst : in std_logic;
         i_bus_scl : in std_logic;
-        o_falling_edge : out std_logic
+        o_falling_scl : out std_logic
     );
 end entity;
 
@@ -52,9 +52,9 @@ begin
     edge_flag: process (i_clk, i_rst) is
     begin
         if (i_rst) then
-            o_falling_edge <= '0';
+            o_falling_scl <= '0';
         elsif (rising_edge(i_clk)) then
-            o_falling_edge <= '1' when (r_scl_state = c_bus_scl0) else '0';
+            o_falling_scl <= '1' when (r_scl_state = c_bus_scl0) else '0';
         end if;
     end process;
 

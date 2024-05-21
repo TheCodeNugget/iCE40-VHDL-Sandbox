@@ -8,7 +8,7 @@ entity i2c_stop_detect is
         i_rst : in std_logic;
         i_bus_scl : in std_logic;
         i_bus_sda : in std_logic;
-        o_stop : out std_logic
+        o_stop_detect : out std_logic
     );
 end entity;
 
@@ -34,10 +34,10 @@ begin
     stop_flag: process (i_clk, i_rst) is
     begin
         if (i_rst) then
-            o_stop <= '0';
+            o_stop_detect <= '0';
         elsif (rising_edge(i_clk)) then
             if ((r_state) and (i_bus_sda) and (i_bus_scl)) then
-                o_stop <= '1';
+                o_stop_detect <= '1';
             end if;
         end if;
     end process;

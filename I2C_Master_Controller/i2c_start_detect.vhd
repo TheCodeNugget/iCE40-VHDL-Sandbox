@@ -8,7 +8,7 @@ entity i2c_start_detect is
         i_rst : in std_logic;
         i_bus_scl : in std_logic;
         i_bus_sda : in std_logic;
-        o_start : out std_logic
+        o_start_detect : out std_logic
     );
 end entity;
 
@@ -49,9 +49,9 @@ begin
     start_detect: process (i_clk, i_rst) is
     begin
         if (i_rst) then
-            o_start <= '0';
+            o_start_detect <= '0';
         elsif rising_edge(i_clk) and (r_startDetect_currState = c_state_detect) then
-            o_start <= '1' when ((not i_bus_sda) and i_bus_scl) else '0';
+            o_start_detect <= '1' when ((not i_bus_sda) and i_bus_scl) else '0';
         end if;
     end process;
 

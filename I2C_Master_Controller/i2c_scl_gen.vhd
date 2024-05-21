@@ -6,7 +6,7 @@ entity i2c_scl_gen is
     port (
         i_clk : in std_logic;
         i_rst : in std_logic;
-        i_en_scl : in std_logic;
+        i_scl_en : in std_logic;
         i_bus_scl : in std_logic;
         i_stop_detect : in std_logic;
         i_clk_div : std_logic_vector(10 downto 0);
@@ -48,7 +48,7 @@ begin
     fsm: process (i_clk, i_rst) is
     begin
         case (r_sclGen_currState) is
-            when c_scl_idle => r_sclGen_nextState <= c_scl_low when (i_en_scl) else r_sclGen_currState;
+            when c_scl_idle => r_sclGen_nextState <= c_scl_low when (i_scl_en) else r_sclGen_currState;
             when c_scl_low => r_sclGen_nextState <= c_scl_wait when (r_count_modby2) else r_sclGen_currState;
             when c_scl_wait => r_sclGen_nextState <= c_scl_high when (i_bus_scl) else r_sclGen_currState;
             when c_scl_high => r_sclGen_nextState <= c_scl_idle when ((not i_bus_scl) or (r_count_modby2)) else r_sclGen_currState;
@@ -61,7 +61,7 @@ begin
             o_i2c_scl <= '1';
         elsif (rising_edge(i_clk)) then
             case (r_sclGen_currState) is
-                when c_scl_idle => o_i2c_scl <= (not i_en_scl);
+                when c_scl_idle => o_i2c_scl <= (not i_scl_en);
                 when c_scl_low => o_i2c_scl <= r_count_modby2;
                 when others => o_i2c_scl <= '1';
             end case;
@@ -74,7 +74,7 @@ begin
             r_count_reset <= '0';
         elsif (rising_edge(i_clk)) then
             case (r_sclGen_currState) is
-                when c_scl_idle => r_count_reset <= i_en_scl;
+                when c_scl_idle => r_count_reset <= i_scl_en;
                 when c_scl_wait => r_count_reset <= not i_bus_scl;
                 when c_scl_high => r_count_reset <= not i_bus_scl;
                 when others => r_count_reset <= '0';
@@ -88,7 +88,7 @@ begin
         if (i_rst) then
             r_count_en <= '0';
         elsif (rising_edge(i_clk)) then
-            if (i_en_scl) then
+            if (i_scl_en) then
                 r_count_en <= '1';
             elsif (i_stop_detect = '1') or (r_sclGen_currState = c_scl_idle) then
                 r_count_en <= '0';
