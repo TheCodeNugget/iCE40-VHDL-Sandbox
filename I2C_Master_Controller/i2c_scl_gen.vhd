@@ -9,7 +9,7 @@ entity i2c_scl_gen is
         i_scl_en : in std_logic;
         i_bus_scl : in std_logic;
         i_stop_detect : in std_logic;
-        i_clk_div : std_logic_vector(10 downto 0);
+        i_clk_div : unsigned(10 downto 0);
         o_scl_timeout : out std_logic;
         o_i2c_scl : out std_logic
     );
@@ -31,8 +31,8 @@ architecture rtl of i2c_scl_gen is
     signal r_count_reset : std_logic;
     signal r_count_en : std_logic;
     signal r_count_modby2 : std_logic;
-    signal r_modulus : std_logic_vector(9 downto 0);
-    signal r_count : std_logic_vector(8 downto 0);
+    signal r_modulus : unsigned(9 downto 0);
+    signal r_count : unsigned(8 downto 0);
 
 begin
 
@@ -45,7 +45,7 @@ begin
         end if;
     end process;
 
-    fsm: process (i_clk, i_rst) is
+    fsm: process (all) is
     begin
         case (r_sclGen_currState) is
             when c_scl_idle => r_sclGen_nextState <= c_scl_low when (i_scl_en) else r_sclGen_currState;
@@ -122,8 +122,12 @@ begin
     begin
         if (i_rst) then
             r_count_modby2 <= '1';
-        else
-            r_count_modby2 <= (r_count = r_modulus(8 downto 0));
+        elsif (rising_edge(i_clk)) then
+            if (r_count = r_modulus(8 downto 0)) then
+                r_count_modby2 <= '1';
+            else
+                r_count_modby2 <= '0';
+            end if;
         end if;
     end process;
 

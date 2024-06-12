@@ -13,7 +13,7 @@ entity i2c_bus_fsm is
         i_start_en : in std_logic;
         i_stop_en : in std_logic;
         i_bps_mode : in std_logic_vector(1 downto 0);
-        i_clk_div : in std_logic_vector(10 downto 0);
+        i_clk_div : in unsigned(10 downto 0);
         o_i2c_scl : out std_logic;
         o_falling_scl : out std_logic;
         o_scl_timeout : out std_logic;
