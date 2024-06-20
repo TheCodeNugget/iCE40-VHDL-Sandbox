@@ -2,6 +2,7 @@ library ieee;
     use ieee.std_logic_1164.all;
     use ieee.numeric_std.all;
 
+--TODO: UNIFY PORT NAMES
 entity i2c_fsm is
     port (
         i_clk : in std_logic;
