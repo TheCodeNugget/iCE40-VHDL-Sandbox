@@ -28,7 +28,7 @@ begin
         elsif (rising_edge(i_clk)) then
             r_in_d1 <= not i_in;
             r_in_d2 <= r_in_d1;
-            r_in_d3 <= r_in_d3;
+            r_in_d3 <= r_in_d2;
         end if;
     end process;
 
