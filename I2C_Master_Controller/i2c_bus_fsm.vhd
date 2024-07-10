@@ -15,6 +15,7 @@ entity i2c_bus_fsm is
         i_bps_mode : in std_logic_vector(1 downto 0);
         i_clk_div : in unsigned(10 downto 0);
         o_i2c_scl : out std_logic;
+        o_arbtr_lost : out std_logic;
         o_falling_scl : out std_logic;
         o_scl_timeout : out std_logic;
         o_start_detect : out std_logic;
@@ -98,5 +99,6 @@ begin
     );
 
     o_i2c_bus_cntrl <= w_i2c_sda_start and w_i2c_sda_stop;
+    o_arbtr_lost <= '0';
 
 end architecture;

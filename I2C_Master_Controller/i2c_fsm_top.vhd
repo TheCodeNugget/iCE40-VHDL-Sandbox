@@ -13,8 +13,8 @@ entity i2c_fsm_top is
         i_scl_timeout   : in std_logic;
         i_slv_addr_reg  : in std_logic_vector(9 downto 0);
         i_byte_cnt_reg  : in unsigned(7 downto 0);
-        i_clk_div       : in std_logic_vector(7 downto 0);
-        i_config_reg    : in std_logic_vector(5 downto 0);
+        i_clk_div       : in unsigned(7 downto 0);
+        i_config_reg    : in std_logic_vector(7 downto 0);
         i_mode_reg      : in std_logic_vector(7 downto 0);
 
         o_start_ack     : out std_logic;
@@ -22,7 +22,7 @@ entity i2c_fsm_top is
         o_i2c_sda_en    : out std_logic;
         o_i2c_txdata_sda: out std_logic;
 
-        o_scl_divcnt    : out std_logic_vector(10 downto 0);
+        o_scl_divcnt    : out unsigned(10 downto 0);
         o_bps_reg       : out std_logic_vector(1 downto 0);
 
         -- I2C Detector FSM Ports
@@ -106,16 +106,11 @@ architecture rtl of i2c_fsm_top is
 
     signal w_abort_reg : std_logic;
     signal w_start_reg : std_logic;
-    signal w_start_bit : std_logic;
     signal w_start_ack : std_logic;
-    signal w_start_rst : std_logic;
     signal r_adr_mode  : std_logic;
     signal r_rw_mode   : std_logic;
-    signal r_ack_mode  : std_logic;
     signal r_txintr_en : std_logic;
     signal r_rxintr_en : std_logic;
-    signal r_config_start_reg : std_logic;
-    signal r_config_reg : std_logic_vector(5 downto 0);
     signal r_byte_count : unsigned(7 downto 0);
     signal r_slave_addr : std_logic_vector(9 downto 0);
 
@@ -157,11 +152,11 @@ begin
         o_rx_en                => w_rx_en,
         o_tx_en                => w_tx_en,
         o_transaction_complete => w_transaction_complete,
-        i_tx_done              => w_tx_done,
+        i_tx_done              => w_byte_tx_done,
         i_tx_err               => w_tx_err,
         o_tx_data              => w_tx_data,
         o_last_byte            => w_last_byte,
-        i_byte_rx_done         => w_byte_tx_done
+        i_byte_rx_done         => w_byte_rx_done
     );
 
     i2c_tx_inst: entity work.i2c_tx
@@ -371,7 +366,7 @@ begin
         end if;
     end process;
 
-    o_scl_divcnt <= i_mode_reg(2 downto 0) & i_clk_div;
+    o_scl_divcnt <= unsigned(i_mode_reg(2 downto 0)) & i_clk_div;
 
     slv_change: process (i_clk, i_rst) is
     begin
@@ -391,13 +386,13 @@ begin
         if (i_rst) then
             o_bps_reg   <= 2b"0";
             r_adr_mode  <= '0';
-            r_ack_mode  <= '0';
+            --r_ack_mode  <= '0';
             r_rw_mode   <= '0';
         elsif (rising_edge(i_clk)) then
             if (w_config_latch_en) then
                 o_bps_reg   <= i_mode_reg(7) & i_mode_reg(6);
                 r_adr_mode  <= i_mode_reg(5);
-                r_ack_mode  <= i_mode_reg(4);
+                --r_ack_mode  <= i_mode_reg(4);
                 r_rw_mode   <= i_mode_reg(3);
             end if;
         end if;
@@ -409,9 +404,9 @@ begin
 
     w_interrupt_reset <= i_rst or w_interrupt_clear or r_intr_clr_reg or r_intr_clr_reg1 or r_intr_clr_reg2 or i_config_reg(1);
 
-    interrupt_handler: process (i_clk, i_rst) is
+    interrupt_handler: process (i_clk, w_interrupt_reset) is
     begin
-        if (i_rst) then
+        if (w_interrupt_reset) then
             o_int_out <= '0';
         elsif (rising_edge(i_clk)) then
             if (r_txintr_en or r_rxintr_en) then

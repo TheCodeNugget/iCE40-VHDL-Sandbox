@@ -7,14 +7,14 @@ entity i2c_rx is
         i_clk : in std_logic;
         i_rst : in std_logic;
         i_en : in std_logic;
-        i_complete : in std_logic;
+        i_transaction_complete : in std_logic;
         i_scl_falling_edge : in std_logic;
         i_bus_scl : in std_logic;
         i_bus_sda : in std_logic;
-        o_byte_rdy : out std_logic;
+        o_byte_rx_done : out std_logic;
         o_sda_en : out std_logic;
         o_rx_ack_sda : out std_logic;
-        o_data : out std_logic_vector(7 downto 0)
+        o_rx_data : out std_logic_vector(7 downto 0)
     );
 end i2c_rx;
 
@@ -84,14 +84,14 @@ begin
         if (rising_edge(i_clk)) then
             if (i_bus_scl) then
                 case r_rx_currState is
-                    when c_rx_bit7 => o_data(7) <= i_bus_sda;
-                    when c_rx_bit6 => o_data(6) <= i_bus_sda;
-                    when c_rx_bit5 => o_data(5) <= i_bus_sda;
-                    when c_rx_bit4 => o_data(4) <= i_bus_sda;
-                    when c_rx_bit3 => o_data(3) <= i_bus_sda;
-                    when c_rx_bit2 => o_data(2) <= i_bus_sda;
-                    when c_rx_bit1 => o_data(1) <= i_bus_sda;
-                    when c_rx_bit0 => o_data(0) <= i_bus_sda;
+                    when c_rx_bit7 => o_rx_data(7) <= i_bus_sda;
+                    when c_rx_bit6 => o_rx_data(6) <= i_bus_sda;
+                    when c_rx_bit5 => o_rx_data(5) <= i_bus_sda;
+                    when c_rx_bit4 => o_rx_data(4) <= i_bus_sda;
+                    when c_rx_bit3 => o_rx_data(3) <= i_bus_sda;
+                    when c_rx_bit2 => o_rx_data(2) <= i_bus_sda;
+                    when c_rx_bit1 => o_rx_data(1) <= i_bus_sda;
+                    when c_rx_bit0 => o_rx_data(0) <= i_bus_sda;
                 end case;
             end if;
         end if;
@@ -121,7 +121,7 @@ begin
         elsif (rising_edge(i_clk)) then
             if (r_rx_currState = c_rx_wack) then
                 if (not i_bus_scl) then
-                    o_rx_ack_sda <= (i_complete);
+                    o_rx_ack_sda <= (i_transaction_complete);
                 end if;
             else
                 o_rx_ack_sda <= '1';
@@ -132,12 +132,12 @@ begin
     byte_flag: process (i_clk, i_rst) is
     begin
         if (i_rst) then
-            o_byte_rdy <= '0';
+            o_byte_rx_done <= '0';
         elsif (rising_edge(i_clk)) then
             if (r_rx_currState = c_rx_wack) and (i_scl_falling_edge = '1') then
-                o_byte_rdy <= '1';
+                o_byte_rx_done <= '1';
             else
-                o_byte_rdy <= '0';
+                o_byte_rx_done <= '0';
             end if;
         end if;
     end process;

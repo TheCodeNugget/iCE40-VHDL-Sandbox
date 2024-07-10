@@ -10,9 +10,9 @@ entity i2c_tx is
         i_scl_falling_edge : in std_logic;
         i_bus_scl : in std_logic;
         i_bus_sda : in std_logic;
-        i_data : in std_logic_vector(7 downto 0);
-        o_byte_sent : out std_logic;
-        o_byte_err : out std_logic;
+        i_tx_data : in std_logic_vector(7 downto 0);
+        o_byte_tx_done : out std_logic;
+        o_byte_tx_err : out std_logic;
         o_sda_disable : out std_logic;
         o_byte_tx_sda : out std_logic
     );
@@ -87,14 +87,14 @@ begin
             with r_tx_currState select
                 o_byte_tx_sda <=
                     '1' when c_tx_idle,
-                    i_data(7) when c_tx_bit7,
-                    i_data(6) when c_tx_bit6,
-                    i_data(5) when c_tx_bit5,
-                    i_data(4) when c_tx_bit4,
-                    i_data(3) when c_tx_bit3,
-                    i_data(2) when c_tx_bit2,
-                    i_data(1) when c_tx_bit1,
-                    i_data(0) when c_tx_bit0,
+                    i_tx_data(7) when c_tx_bit7,
+                    i_tx_data(6) when c_tx_bit6,
+                    i_tx_data(5) when c_tx_bit5,
+                    i_tx_data(4) when c_tx_bit4,
+                    i_tx_data(3) when c_tx_bit3,
+                    i_tx_data(2) when c_tx_bit2,
+                    i_tx_data(1) when c_tx_bit1,
+                    i_tx_data(0) when c_tx_bit0,
                     '1' when c_tx_rack,
                     '1' when others;
         end if;
@@ -120,12 +120,12 @@ begin
     tx_err: process (i_clk, i_rst) is
     begin
         if (i_rst) then
-            o_byte_err <= '0';
+            o_byte_tx_err <= '0';
         elsif (rising_edge(i_clk)) then
             if (r_tx_currState = c_tx_rack) and (i_bus_scl = '1') and (i_bus_sda = '1') then
-                o_byte_err <= '1';
-            elsif (o_byte_sent = '1') then
-                o_byte_err <= '0';
+                o_byte_tx_err <= '1';
+            elsif (o_byte_tx_done = '1') then
+                o_byte_tx_err <= '0';
             end if;
         end if;
     end process;
@@ -137,12 +137,12 @@ begin
     tx_done: process (i_clk, i_rst) is
     begin
         if (i_rst) then
-            o_byte_sent <= '0';
+            o_byte_tx_done <= '0';
         elsif (rising_edge(i_clk)) then
             if (r_tx_currState = c_tx_rack) and (i_scl_falling_edge = '1') then
-                o_byte_sent <= '1';
+                o_byte_tx_done <= '1';
             else
-                o_byte_sent <= '0';
+                o_byte_tx_done <= '0';
             end if;
         end if;
     end process;

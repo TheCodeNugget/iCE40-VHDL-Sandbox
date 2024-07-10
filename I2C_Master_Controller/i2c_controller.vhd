@@ -38,14 +38,9 @@ architecture rtl of i2c_controller is
     signal w_arbtr_lost: std_logic;
     signal w_scl_timeout: std_logic;
     signal w_int_out: std_logic;
-    signal w_force_i2c: std_logic;
     signal w_bps_mode: std_logic_vector(1 downto 0);
     signal w_scl_divcount: unsigned(10 downto 0);
     signal w_tx_en: std_logic;
-
-
-    signal w_gpio1: std_logic_vector(2 downto 0);
-    signal w_gpio2: std_logic_vector(2 downto 0);
 
     signal w_scl_en: std_logic;
     signal w_start_gen_en: std_logic;
@@ -90,7 +85,7 @@ begin
     bus_scl_filter: entity work.filter
     port map (
         i_clk => i_clk,
-        i_rst => i_rst,
+        i_rst => w_reset,
         i_in  => i_scl_in,
         o_out => w_scl_filtered
     );
@@ -98,7 +93,7 @@ begin
     bus_sda_filter: entity work.filter
     port map (
         i_clk => i_clk,
-        i_rst => i_rst,
+        i_rst => w_reset,
         i_in  => i_sda_in,
         o_out => w_sda_filtered
     );
@@ -110,7 +105,7 @@ begin
     i2c_bus_fsm_inst: entity work.i2c_bus_fsm
     port map (
         i_clk           => i_clk,
-        i_rst           => i_rst,
+        i_rst           => w_reset,
         i_bus_scl       => w_scl_filtered,
         i_bus_sda       => w_sda_filtered,
         i_scl_en        => w_scl_en,
@@ -137,7 +132,7 @@ begin
     i2c_fsm_top_inst: entity work.i2c_fsm_top
     port map (
         i_clk              => i_clk,
-        i_rst              => i_rst,
+        i_rst              => w_rst,
         i_bus_sda          => w_sda_filtered,
         i_bus_scl          => w_scl_filtered,
 
@@ -177,4 +172,21 @@ begin
         o_txfifo_rd_en     => o_tx_data_req
     );
 
+    -----------------------------------------------------------
+    -- Soft Reset Synchronizer
+    -----------------------------------------------------------
+
+    w_rst_out <= r_soft_reset_d2 and (not r_soft_reset_d3);
+    soft_reset_snyc: process (i_clk, w_rst) is
+    begin
+        if (w_rst) then
+            r_soft_reset_d1 <= '0';
+            r_soft_reset_d2 <= '0';
+            r_soft_reset_d3 <= '0';
+        elsif (rising_edge(i_clk)) then
+            r_soft_reset_d1 <= i_config_reg(5);
+            r_soft_reset_d2 <= r_soft_reset_d1;
+            r_soft_reset_d3 <= r_soft_reset_d2;
+        end if;
+    end process;
 end architecture;
